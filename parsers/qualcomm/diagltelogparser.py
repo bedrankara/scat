@@ -6,6 +6,17 @@ import util
 import struct
 import calendar, datetime
 import logging
+import sys
+import json
+
+try:
+    from pycrate_asn1dir import RRCLTE
+    from binascii import unhexlify, hexlify
+    from pycrate_mobile.NAS import *
+    
+except ImportError as e:
+    print(e)
+    print("Error: Pycrate is not installed !")
 
 class DiagLteLogParser:
     def __init__(self, parent):
@@ -91,7 +102,8 @@ class DiagLteLogParser:
                 s_intra_search_q = (r9_data_interim >> 14) & 0x3f
                 s_nonintra_search_q = (r9_data_interim >> 20) & 0x3f
             else:
-                self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 Serving Cell Meas packet - RRC version {}'.format(rrc_rel))
+                #self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 Serving Cell Meas packet - RRC version {}'.format(rrc_rel))
+                pass
             real_rsrp = -180 + meas_rsrp * 0.0625
             real_rssi = -110 + meas_rssi * 0.0625
             real_rsrq = -30 + meas_rsrq * 0.0625
@@ -133,13 +145,14 @@ class DiagLteLogParser:
                 s_intra_search_q = (r9_data_interim >> 14) & 0x3f
                 s_nonintra_search_q = (r9_data_interim >> 20) & 0x3f
             else:
-                self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 Serving Cell Meas packet - RRC version {}'.format(rrc_rel))
+                #self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 Serving Cell Meas packet - RRC version {}'.format(rrc_rel))
+                pass
             real_rsrp = -180 + meas_rsrp * 0.0625
             real_rssi = -110 + meas_rssi * 0.0625
             real_rsrq = -30 + meas_rsrq * 0.0625
             print('Radio {}: LTE SCell: EARFCN {}, PCI {:3d}, Measured RSRP {:.2f}, Measured RSSI {:.2f}'.format(self.parent.sanitize_radio_id(radio_id), earfcn, pci, real_rsrp, real_rssi))
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 Serving Cell Meas packet version {}'.format(pkt[0]))
+            #self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 Serving Cell Meas packet version {}'.format(pkt[0]))
             return
 
     def parse_lte_ml1_ncell_meas(self, pkt_ts, pkt, radio_id):
@@ -212,7 +225,8 @@ class DiagLteLogParser:
 
                 print('Radio {}: Neighbor cell {}: PCI {:3d}, RSRP {:.2f}, RSSI {:.2f}'.format(self.parent.sanitize_radio_id(radio_id), i, n_pci, n_real_rsrp, n_real_rssi))
         else:
-            self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Neighbor Meas packet version {}'.format(self.parent.sanitize_radio_id(radio_id), pkt[0]))
+            #self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Neighbor Meas packet version {}'.format(self.parent.sanitize_radio_id(radio_id), pkt[0]))
+            pass
 
     def parse_lte_ml1_scell_meas_response(self, pkt_ts, pkt, radio_id):
         # First 4b: Version, Number of subpackets, reserved
@@ -248,13 +262,15 @@ class DiagLteLogParser:
                         print('Radio {}: LTE ML1 SCell Meas Response: EARFCN {}, Number of cells = {}, Valid RX = {}'.format(self.parent.sanitize_radio_id(radio_id), earfcn, num_cell, valid_rx))
                         print('Radio {}: LTE ML1 SCell Meas Response (Cell 0): PCI {}, Serving cell index {}, is_serving_cell = {}'.format(self.parent.sanitize_radio_id(radio_id), pci, scell_idx, is_scell))
                     else:
-                        self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Serving Cell Meas Serving Cell Measurement Result subpacket version {}'.format(self.parent.sanitize_radio_id(radio_id), scell_measurement_version))
-
+                        #self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Serving Cell Meas Serving Cell Measurement Result subpacket version {}'.format(self.parent.sanitize_radio_id(radio_id), scell_measurement_version))
+                        pass
                     pos += scell_subpacket_size
                 else:
-                    self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Serving Cell Meas subpacket ID {}'.format(self.parent.sanitize_radio_id(radio_id), subpkt_id))
+                    #self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Serving Cell Meas subpacket ID {}'.format(self.parent.sanitize_radio_id(radio_id), subpkt_id))
+                    pass
         else:
-            self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Serving Cell Meas Response packet version {}'.format(self.parent.sanitize_radio_id(radio_id), pkt[0]))
+            #self.parent.logger.log(logging.WARNING, 'Radio {}: Unknown LTE ML1 Serving Cell Meas Response packet version {}'.format(self.parent.sanitize_radio_id(radio_id), pkt[0]))
+            pass
 
     def parse_lte_ml1_cell_info(self, pkt_ts, pkt, radio_id):
         mib_payload = bytes([0, 0, 0])
@@ -280,7 +296,8 @@ class DiagLteLogParser:
 
             mib_payload = bytes([pkt[31], pkt[30], pkt[29]])
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 cell info packet version {}'.format(pkt[0]))
+            #self.parent.logger.log(logging.WARNING, 'Unknown LTE ML1 cell info packet version {}'.format(pkt[0]))
+            pass
 
         ts_sec = calendar.timegm(pkt_ts.timetuple())
         ts_usec = pkt_ts.microsecond
@@ -297,7 +314,7 @@ class DiagLteLogParser:
 
     def parse_lte_mac_rach_trigger(self, pkt_ts, pkt, radio_id):
         # XXX: Wireshark's GSMTAP dissector does not support PRACH preamble
-        self.parent.logger.log(logging.WARNING, "Unhandled XDM Header 0xB061: LTE MAC RACH Trigger")
+        #self.parent.logger.log(logging.WARNING, "Unhandled XDM Header 0xB061: LTE MAC RACH Trigger")
         return
 
     def parse_lte_mac_rach_response(self, pkt_ts, pkt, radio_id):
@@ -307,7 +324,7 @@ class DiagLteLogParser:
         earfcn = self.parent.lte_last_earfcn_dl[self.parent.sanitize_radio_id(radio_id)] | (1 << 14)
 
         if msg_content[0] != 0x01:
-            self.parent.logger.log(logging.WARNING, 'Unsupported LTE MAC RACH response packet version %02x' % msg_content[0])
+            #self.parent.logger.log(logging.WARNING, 'Unsupported LTE MAC RACH response packet version %02x' % msg_content[0])
             return
 
         n_subpackets = pkt[1]
@@ -339,15 +356,15 @@ class DiagLteLogParser:
                     rach_msg2 = subpkt[10:17]
                     rach_msg3 = subpkt[17:34]
                 else:
-                    self.parent.logger.log(logging.WARNING, 'Unexpected MAC RACH Response Subpacket version %s' % subpkt_version)
-                    self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+                    #self.parent.logger.log(logging.WARNING, 'Unexpected MAC RACH Response Subpacket version %s' % subpkt_version)
+                    #self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
                     continue
 
                 if rach_result != 0x00: # RACH Failure, 0x00 == Success
-                    self.parent.logger.log(logging.WARNING, 'RACH result is not success: {}'.format(rach_result))
+                    #self.parent.logger.log(logging.WARNING, 'RACH result is not success: {}'.format(rach_result))
                     continue
                 if rach_msg_bitmask != 0x07: # not all message present
-                    self.parent.logger.log(logging.WARNING, 'Not enough message to generate RAR')
+                    #self.parent.logger.log(logging.WARNING, 'Not enough message to generate RAR')
                     continue
 
                 rapid = rach_msg1[0]
@@ -399,7 +416,8 @@ class DiagLteLogParser:
                 self.parent.writer.write_cp(gsmtap_hdr + mac_header_rar + rar_body, self.parent.sanitize_radio_id(radio_id), pkt_ts)
                 self.parent.writer.write_cp(gsmtap_hdr + mac_header_msg + mac_pdu, self.parent.sanitize_radio_id(radio_id), pkt_ts)
             else:
-                self.parent.logger.log(logging.WARNING, 'Unexpected MAC RACH Response Subpacket ID %s' % subpkt_id)
+                #self.parent.logger.log(logging.WARNING, 'Unexpected MAC RACH Response Subpacket ID %s' % subpkt_id)
+                pass
 
     def create_lte_mac_gsmtap_packet(self, pkt_ts, is_downlink, header, body, radio_id):
         earfcn = self.parent.lte_last_earfcn_dl[self.parent.sanitize_radio_id(radio_id)]
@@ -494,10 +512,12 @@ class DiagLteLogParser:
                                 radio_id)
                             pos_sample += (14 + header_len)
                     else:
-                        self.parent.logger.log(logging.WARNING, 'Unexpected DL MAC Subpacket version {}'.format(subpkt_version))
-                        self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+                        #self.parent.logger.log(logging.WARNING, 'Unexpected DL MAC Subpacket version {}'.format(subpkt_version))
+                        #self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+                        pass
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown LTE MAC DL packet version {}'.format(pkt[0]))
+            #self.parent.logger.log(logging.WARNING, 'Unknown LTE MAC DL packet version {}'.format(pkt[0]))
+            pass
 
     def parse_lte_mac_ul_block(self, pkt_ts, pkt, radio_id):
         if pkt[0] == 1:
@@ -559,10 +579,12 @@ class DiagLteLogParser:
                                 radio_id)
                             pos_sample += (14 + header_len)
                     else:
-                        self.parent.logger.log(logging.WARNING, 'Unexpected LTE MAC UL Subpacket version %s' % subpkt_version)
-                        self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+                        #self.parent.logger.log(logging.WARNING, 'Unexpected LTE MAC UL Subpacket version %s' % subpkt_version)
+                        #self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+                        pass
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown LTE MAC UL packet version %s' % pkt[0])
+            #self.parent.logger.log(logging.WARNING, 'Unknown LTE MAC UL packet version %s' % pkt[0])
+            pass
 
     # 0x4021: 01|00 000|0 00|10 0001 (valid, bearer id=0, mode=AM, sn=5b, cidx = 33)
     # 0x4222: 01|00 001|0 00|10 0010 (valid, bearer id=1, mode=AM, sn=5b, cidx = 34)
@@ -595,7 +617,7 @@ class DiagLteLogParser:
                 subpkt_size = pkt[pos + 2] | (pkt[pos + 3] << 8)
 
                 if subpkt_id != 0xC6:
-                    self.parent.logger.log(logging.WARNING, 'Unexpected PDCP DL SRB Subpacket ID %s' % subpkt_id)
+                    #self.parent.logger.log(logging.WARNING, 'Unexpected PDCP DL SRB Subpacket ID %s' % subpkt_id)
                     pos += subpkt_size
                     continue
 
@@ -622,11 +644,12 @@ class DiagLteLogParser:
                         pos_sample += (20 + pdu_hdr[2])
 
                 else:
-                    self.parent.logger.log(logging.WARNING, 'Unexpected PDCP DL SRB Subpacket version %s' % subpkt_ver)
+                    #self.parent.logger.log(logging.WARNING, 'Unexpected PDCP DL SRB Subpacket version %s' % subpkt_ver)
                     pos += subpkt_size
                     continue
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown PDCP DL SRB packet version %s' % pkt[16])
+            #self.parent.logger.log(logging.WARNING, 'Unknown PDCP DL SRB packet version %s' % pkt[16])
+            pass
 
     def parse_lte_pdcp_ul_srb_int(self, pkt_ts, pkt, radio_id):
         earfcn = self.parent.lte_last_earfcn_dl[self.parent.sanitize_radio_id(radio_id)] | (1 << 14)
@@ -648,7 +671,7 @@ class DiagLteLogParser:
                 subpkt_size = pkt[pos + 2] | (pkt[pos + 3] << 8)
 
                 if subpkt_id != 0xC7:
-                    self.parent.logger.log(logging.WARNING, 'Unexpected PDCP DL SRB Subpacket ID %s' % subpkt_id)
+                    #self.parent.logger.log(logging.WARNING, 'Unexpected PDCP DL SRB Subpacket ID %s' % subpkt_id)
                     pos += subpkt_size
                     continue
 
@@ -675,11 +698,12 @@ class DiagLteLogParser:
                         pos_sample += (16 + pdu_hdr[2])
 
                 else:
-                    self.parent.logger.log(logging.WARNING, 'Unexpected PDCP UL SRB Subpacket version %s' % subpkt_ver)
+                    #self.parent.logger.log(logging.WARNING, 'Unexpected PDCP UL SRB Subpacket version %s' % subpkt_ver)
                     pos += subpkt_size
                     continue
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown PDCP UL SRB packet version %s' % pkt[16])
+            #self.parent.logger.log(logging.WARNING, 'Unknown PDCP UL SRB packet version %s' % pkt[16])
+            pass
 
     def parse_lte_mib(self, pkt_ts, pkt, radio_id):
         msg_content = pkt
@@ -794,7 +818,8 @@ class DiagLteLogParser:
             self.parent.lte_last_bw_dl[self.parent.sanitize_radio_id(radio_id)] = pkt_content[3]
             self.parent.lte_last_bw_ul[self.parent.sanitize_radio_id(radio_id)] = pkt_content[4]
         else:
-            self.parent.logger.log(logging.WARNING, 'Unknown LTE RRC cell info packet version %s' % pkt[0])
+            #self.parent.logger.log(logging.WARNING, 'Unknown LTE RRC cell info packet version %s' % pkt[0])
+            pass
 
     def parse_lte_rrc(self, pkt_ts, pkt, radio_id):
         msg_hdr = b''
@@ -890,8 +915,8 @@ class DiagLteLogParser:
             # XXX: needs proper field for physical cell id
             sfn = sfn | (p_cell_id << 16)
         else:
-            self.parent.logger.log(logging.WARNING, 'Unhandled LTE RRC packet version %s' % pkt[0])
-            self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+            #self.parent.logger.log(logging.WARNING, 'Unhandled LTE RRC packet version %s' % pkt[0])
+            #self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
             return 
 
         if pkt[0] in (0x02, 0x03, 0x04, 0x06, 0x07, 0x08, 0x0d, 0x16):
@@ -985,8 +1010,8 @@ class DiagLteLogParser:
         ts_usec = pkt_ts.microsecond
 
         if not (subtype in rrc_subtype_map.keys()):
-            self.parent.logger.log(logging.WARNING, "Unknown RRC subtype 0x%02x for RRC packet version 0x%02x" % (subtype, pkt[0]))
-            self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
+            #self.parent.logger.log(logging.WARNING, "Unknown RRC subtype 0x%02x for RRC packet version 0x%02x" % (subtype, pkt[0]))
+            #self.parent.logger.log(logging.DEBUG, util.xxd(pkt))
             return 
 
         gsmtap_hdr = util.create_gsmtap_header(
@@ -998,6 +1023,15 @@ class DiagLteLogParser:
             sub_slot = subfn,
             device_sec = ts_sec,
             device_usec = ts_usec)
+        
+        if str(rrc_subtype_map[subtype]) == "gsmtap_lte_rrc_types.PCCH":
+            sch = RRCLTE.EUTRA_RRC_Definitions.PCCH_Message
+            sch.from_uper(unhexlify(msg_content.hex()))
+            json_string = sch.to_json()
+            data = json.loads(json_string)
+            if 'paging' in data['message']['c1']:
+                print("Paging received\n")
+                
 
         self.parent.writer.write_cp(gsmtap_hdr + msg_content, radio_id, pkt_ts)
 

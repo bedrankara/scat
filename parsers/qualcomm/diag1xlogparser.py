@@ -56,7 +56,7 @@ class Diag1xLogParser:
                 pending_pkt = self.pending_pkts.get(pkt_id)
                 for x in range(segn):
                     if not (x in pending_pkt.keys()):
-                        self.parent.logger.log(logging.WARNING, "Warning: segment %d for data packet (%d, %s, %d) missing" % (x, ifname_id, is_tx, seqn))
+                        #self.parent.logger.log(logging.WARNING, "Warning: segment %d for data packet (%d, %s, %d) missing" % (x, ifname_id, is_tx, seqn))
                         continue
                     pkt_buf += pending_pkt[x]
                 del self.pending_pkts[pkt_id]
@@ -91,7 +91,7 @@ class Diag1xLogParser:
                 # 0x01: Timestamp
                 pos += 9
             else:
-                self.parent.logger.log(logging.WARNING, 'Not handling unknown type 0x%02x' % msg_content[pos])
+                #self.parent.logger.log(logging.WARNING, 'Not handling unknown type 0x%02x' % msg_content[pos])
                 break
 
         gsmtap_hdr = util.create_gsmtap_header(

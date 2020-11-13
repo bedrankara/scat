@@ -80,6 +80,7 @@ class DiagLteEventParser:
             rrc_state = "{:02x}".format(arg1)
 
         log_content = "LTE_RRC_STATE_CHANGE: rrc_state={}".format(rrc_state).encode('utf-8')
+        print(log_content)
 
         self.parent.writer.write_cp(gsmtap_hdr + osmocore_log_hdr + log_content, radio_id, ts)
 

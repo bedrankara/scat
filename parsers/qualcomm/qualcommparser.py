@@ -369,7 +369,8 @@ class QualcommParser:
                 elif event_id in self.no_process_event.keys():
                     pass
                 else:
-                    print("Event: {} {}".format(event_id, ts))
+                    #print("Event: {} {}".format(event_id, ts))
+                    pass
             elif payload_len == 1:
                 # 1x uint8
                 arg1 = pkt[pos]
@@ -379,7 +380,8 @@ class QualcommParser:
                 elif event_id in self.no_process_event.keys():
                     pass
                 else:
-                    print("Event: {} {}: 0x{:02x}".format(event_id, ts, arg1))
+                    #print("Event: {} {}: 0x{:02x}".format(event_id, ts, arg1))
+                    pass
                 pos += 1
             elif payload_len == 2:
                 # 2x uint8
@@ -391,7 +393,8 @@ class QualcommParser:
                 elif event_id in self.no_process_event.keys():
                     pass
                 else:
-                    print("Event: {} {}: 0x{:02x} 0x{:02x}".format(event_id, ts, arg1, arg2))
+                    #print("Event: {} {}: 0x{:02x} 0x{:02x}".format(event_id, ts, arg1, arg2))
+                    pass
                 pos += 2
             elif payload_len == 3:
                 # Pascal string
@@ -403,8 +406,9 @@ class QualcommParser:
                 elif event_id in self.no_process_event.keys():
                     pass
                 else:
-                    print("Event {}: {}: Binary(len=0x{:02x}) = {}"
-                    .format(event_id, ts, bin_len, ' '.join('{:02x}'.format(x) for x in arg_bin)))
+                    #print("Event {}: {}: Binary(len=0x{:02x}) = {}"
+                    #.format(event_id, ts, bin_len, ' '.join('{:02x}'.format(x) for x in arg_bin)))
+                    pass
                 pos += (1 + pkt[pos])
 
     def parse_diag_qsr_ext_msg(self, pkt, radio_id):

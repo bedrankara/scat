@@ -94,7 +94,8 @@ class DiagGsmLogParser:
                     print('Radio {}: 2G Serving Cell New: ARFCN {}/BC {}, RxPwr {:.2f}'.format(self.parent.sanitize_radio_id(radio_id), c_arfcn, c_band, c_rxpwr_real))
                 i += 1
         else:
-            self.parent.logger.log(logging.WARNING, 'Unsupported GSM L1 New Burst Metric version {}'.format(pkt[0]))
+            #self.parent.logger.log(logging.WARNING, 'Unsupported GSM L1 New Burst Metric version {}'.format(pkt[0]))
+            pass
 
     def parse_gsm_l1_burst_metric(self, pkt_ts, pkt, radio_id):
         chan = pkt[0]
